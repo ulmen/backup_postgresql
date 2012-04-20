@@ -16,10 +16,10 @@ mkdir -p $DIR
 cd $DIR
 
 # get list of databases in system , exclude the tempate dbs
-DBS=$($PSQL -l -t | egrep -v 'template[01]' | awk '{print $1}')
+DBS=$($PSQL -l -t | egrep -v 'template[01]' | awk '{print $1}' | grep -v "|")
 
 # first dump entire postgres database, including pg_shadow etc.
-$DUMPALL -D | gzip -9 > "$DIR/db.out.gz"
+$DUMPALL | gzip -9 > "$DIR/db.out.gz"
 
 # next dump globals (roles and tablespaces) only
 $DUMPALL -g | gzip -9 > "$DIR/globals.gz"
@@ -30,7 +30,7 @@ for database in $DBS; do
     DATA=$DIR/$database.data.gz
 
     # export data from postgres databases to plain text
-    $PGDUMP -C -c -s $database | gzip -9 > $SCHEMA
+    $PGDUMP -C -s $database | gzip -9 > $SCHEMA
 
     # dump data
     $PGDUMP -a $database | gzip -9 > $DATA
